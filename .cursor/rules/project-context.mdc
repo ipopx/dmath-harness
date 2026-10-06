@@ -1,0 +1,21 @@
+---
+description: Project goals and research context for the DMATH harness
+alwaysApply: true
+---
+
+# DMATH Harness - Project Context
+
+Research project comparing whether a harness around an open LLM improves performance on solving math exams from **D-MATH** (Department of Mathematics) at ETH Zurich.
+
+## Goal
+
+Measure and compare:
+
+1. **Baseline**: an open LLM solving D-MATH exam problems directly
+2. **Harnessed**: the same model wrapped in a harness (tooling, prompting, verification, scaffolding, etc.) aimed at better exam performance
+
+## Scope notes
+
+- Domain: ETH D-MATH (Department of Mathematics) exam problems
+- Focus: empirical comparison of harness vs. bare model
+- Stack: Python (pixi-managed)

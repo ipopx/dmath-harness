@@ -1,0 +1,12 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "dmath-harness"
+version = "0.1.0"
+description = "Harness vs bare open LLM on ETH D-MATH exams"
+requires-python = ">=3.11"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/dmath_harness"]

@@ -1,0 +1,117 @@
+{
+  "exam_id": "dmath-mock-2024-hs",
+  "department": "D-MATH",
+  "course": "Discrete Mathematics",
+  "course_code": "401-0131-00L",
+  "institution": "ETH Zurich",
+  "term": "HS2024",
+  "language": "en",
+  "total_points": 20,
+  "notes": "Synthetic Phase-0 fixture for harness/grader development. Not a real exam. DMATH/D-MATH = Department of Mathematics, not the course name.",
+  "questions": [
+    {
+      "id": "Q1",
+      "type": "mcq",
+      "topic": "propositional_logic",
+      "difficulty": "easy",
+      "language": "en",
+      "points": 4,
+      "prompt": "Which of the following formulas is a tautology?",
+      "choices": {
+        "A": "(P ∧ Q) → P",
+        "B": "P → (P ∧ Q)",
+        "C": "(P ∨ Q) → P",
+        "D": "¬(P → Q) ↔ (¬P ∨ Q)"
+      },
+      "reference": {
+        "answer": "A",
+        "rationale": "(P ∧ Q) → P is always true: if both P and Q hold then P holds. The others fail for some assignments (e.g. B fails when P is true and Q is false)."
+      },
+      "steps": [
+        {
+          "id": "Q1.a",
+          "description": "Select the correct choice",
+          "points": 4,
+          "topic": "propositional_logic",
+          "grading": "exact_match",
+          "expected": "A"
+        }
+      ]
+    },
+    {
+      "id": "Q2",
+      "type": "short_answer",
+      "topic": "combinatorics",
+      "difficulty": "medium",
+      "language": "en",
+      "points": 6,
+      "prompt": "How many ways are there to choose a committee of 3 students from a class of 10, if the order of members does not matter? Give an integer answer and a brief derivation.",
+      "reference": {
+        "answer": 120,
+        "derivation": "Unordered selection → binomial coefficient C(10,3) = 10!/(3!·7!) = (10·9·8)/(3·2·1) = 120."
+      },
+      "steps": [
+        {
+          "id": "Q2.a",
+          "description": "Identify that the count is C(10,3)",
+          "points": 2,
+          "topic": "combinatorics",
+          "grading": "llm_judge",
+          "expected": "Recognizes combinations / binomial coefficient C(10,3) (or equivalent)."
+        },
+        {
+          "id": "Q2.b",
+          "description": "Compute the numeric value",
+          "points": 4,
+          "topic": "combinatorics",
+          "grading": "numeric_exact",
+          "expected": 120
+        }
+      ]
+    },
+    {
+      "id": "Q3",
+      "type": "proof",
+      "topic": "graph_theory",
+      "difficulty": "hard",
+      "language": "en",
+      "points": 10,
+      "prompt": "Let G be a simple undirected graph on n ≥ 2 vertices. Prove that if every vertex has degree at least (n−1)/2, then G is connected.",
+      "reference": {
+        "answer": "Proof by contradiction (or equivalent). Suppose G is disconnected. Let C be a connected component with the fewest vertices, |V(C)| = k. Then k ≤ n/2. Every vertex v ∈ C has all neighbors in C, so deg(v) ≤ k−1 ≤ n/2 − 1 = (n−2)/2 < (n−1)/2, contradicting the degree hypothesis. Hence G is connected.",
+        "key_ideas": [
+          "Assume disconnected; pick a smallest component C",
+          "Bound |V(C)| ≤ n/2",
+          "Deduce deg(v) ≤ |V(C)|−1 < (n−1)/2 for v in C",
+          "Contradiction to minimum-degree assumption"
+        ]
+      },
+      "steps": [
+        {
+          "id": "Q3.a",
+          "description": "Set up a correct proof strategy (e.g. contradiction via a component)",
+          "points": 3,
+          "topic": "graph_theory",
+          "grading": "llm_judge",
+          "expected": "Clear plan: assume G disconnected and analyze a component (or equivalent valid approach)."
+        },
+        {
+          "id": "Q3.b",
+          "description": "Obtain a size / degree bound on that component",
+          "points": 4,
+          "topic": "graph_theory",
+          "grading": "llm_judge",
+          "expected": "Shows vertices in a proper component have deg ≤ |component|−1 and relates this to (n−1)/2."
+        },
+        {
+          "id": "Q3.c",
+          "description": "Reach a contradiction and conclude connectivity",
+          "points": 3,
+          "topic": "graph_theory",
+          "grading": "llm_judge",
+          "expected": "Contradiction to δ(G) ≥ (n−1)/2; concludes G is connected."
+        }
+      ]
+    }
+  ]
+}

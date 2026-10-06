@@ -1,0 +1,22 @@
+[workspace]
+name = "dmath-harness"
+version = "0.1.0"
+channels = ["conda-forge"]
+platforms = ["osx-arm64", "osx-64", "linux-64"]
+
+[dependencies]
+python = ">=3.11,<3.13"
+pandas = "*"
+openai = ">=1.40"
+python-dotenv = "*"
+pydantic = ">=2"
+
+[tasks]
+baseline-mock = { cmd = "python -m dmath_harness baseline run --exam data/exams/dmath-mock-2024-hs.json", env = { PYTHONPATH = "src" } }
+
+[feature.dev.dependencies]
+pytest = "*"
+
+[environments]
+default = { features = [], solve-group = "default" }
+dev = { features = ["dev"], solve-group = "default" }
