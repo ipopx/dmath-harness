@@ -8,7 +8,7 @@ from typing import Any
 
 from openai import APIError, OpenAI
 
-from dmath_harness.config import ChatConfig
+from dmath_harness.client.config import ChatConfig
 
 
 @dataclass(frozen=True)

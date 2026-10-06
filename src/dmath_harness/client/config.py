@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import os
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 
 from dotenv import load_dotenv
 
@@ -41,3 +41,12 @@ def load_config(*, env_file: str | None = ".env") -> ChatConfig:
         temperature=temperature,
         timeout_s=timeout_s,
     )
+
+
+def load_judge_config(*, env_file: str | None = ".env") -> ChatConfig:
+    """Load judge config; ``JUDGE_MODEL`` defaults to ``MODEL``."""
+    base = load_config(env_file=env_file)
+    judge_model = os.getenv("JUDGE_MODEL") or base.model
+    judge_temp = os.getenv("JUDGE_TEMPERATURE")
+    temperature = float(judge_temp) if judge_temp is not None else base.temperature
+    return replace(base, model=judge_model, temperature=temperature)

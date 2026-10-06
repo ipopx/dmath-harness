@@ -13,6 +13,7 @@ pydantic = ">=2"
 
 [tasks]
 baseline-mock = { cmd = "python -m dmath_harness baseline run --exam data/exams/dmath-mock-2024-hs.json", env = { PYTHONPATH = "src" } }
+grade-mock = { cmd = "python -m dmath_harness grade run --exam data/exams/dmath-mock-2024-hs.json --trajectories runs/baseline_apertus8b_mock.jsonl --out runs/grades_apertus8b_mock.json", env = { PYTHONPATH = "src" } }
 
 [feature.dev.dependencies]
 pytest = "*"

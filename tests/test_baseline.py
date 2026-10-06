@@ -1,7 +1,5 @@
-from dmath_harness.baseline import build_messages
-from dmath_harness.client import ChatClient, ChatResult, Usage
-from dmath_harness.config import ChatConfig
-from dmath_harness.baseline import run_baseline
+from dmath_harness.baseline import build_messages, run_baseline
+from dmath_harness.client import ChatClient, ChatConfig, ChatResult, Usage
 from dmath_harness.exam import load_exam
 from pathlib import Path
 

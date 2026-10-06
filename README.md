@@ -107,6 +107,41 @@ Note: the Ollama tag is a **community GGUF** of Apertus 8B Instruct, not the
 CSCS-hosted `swiss-ai/Apertus-v1.5-*` checkpoint. Re-run on CSCS for official
 cross-model comparisons.
 
+### 5. Grade a baseline run (Phase 0.2 hybrid grader)
+
+Scores trajectories against the exam JSON:
+
+- **MCQ** — deterministic letter extract + exact match
+- **Short answer** — numeric exact match + holistic LLM judge for method points
+- **Proof** — holistic LLM judge (one score for the whole proof; not step-wise)
+
+Uses the same OpenAI-compatible stack; optional `JUDGE_MODEL` in `.env`
+(defaults to `MODEL`).
+
+```bash
+# requires runs/baseline_apertus8b_mock.jsonl from step 3
+pixi run grade-mock
+```
+
+Or explicitly:
+
+```bash
+PYTHONPATH=src pixi run python -m dmath_harness grade run \
+  --exam data/exams/dmath-mock-2024-hs.json \
+  --trajectories runs/baseline_apertus8b_mock.jsonl \
+  --out runs/grades_apertus8b_mock.json
+```
+
+Deterministic-only (skip LLM judge; method/proof get 0):
+
+```bash
+PYTHONPATH=src pixi run python -m dmath_harness grade run \
+  --exam data/exams/dmath-mock-2024-hs.json \
+  --trajectories runs/baseline_apertus8b_mock.jsonl \
+  --out runs/grades_deterministic_only.json \
+  --no-judge
+```
+
 ### Tests (no model needed)
 
 ```bash
