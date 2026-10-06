@@ -7,14 +7,21 @@ import re
 from dataclasses import dataclass
 from typing import Any
 
+from dmath_harness.agent import DEFAULT_STEP_LIMIT, Agent
 from dmath_harness.client import ChatClient
+from dmath_harness.tools import TOOL_SCHEMAS
 
 JUDGE_SYSTEM = """\
 You are a strict but fair mathematics exam grader for ETH D-MATH.
 Award partial credit when the student shows correct ideas, even if the writeup
 differs from the reference (many valid proofs/solutions exist).
 Do NOT solve the problem from scratch; only grade the student answer.
-Respond with ONLY a single JSON object (no markdown fences, no extra text):
+You may use tools to verify the student's arithmetic or code (same as the exam agent):
+- calculator: quick pure arithmetic expressions
+- run_python: execute Python (stdlib, numpy, sympy); print results explicitly
+When you are done (including after any tool use), reply with your grade and do not \
+call tools. Your final reply must be ONLY a single JSON object (no markdown fences, \
+no extra text):
 {"points_awarded": <number>, "max_points": <number>, "rationale": "<short>"}
 points_awarded must be between 0 and max_points inclusive.
 """
@@ -47,27 +54,33 @@ def holistic_judge(
     student_answer: str,
     max_points: float,
     rubric_hint: str | None = None,
+    step_limit: int = DEFAULT_STEP_LIMIT,
+    tools: list[dict[str, Any]] | None = None,
 ) -> JudgeAward:
-    """Ask the judge model for a holistic score in ``0..max_points``."""
-    messages = [
+    """Run a tool-enabled ReAct judge; return a holistic score in ``0..max_points``."""
+    tool_schemas = list(TOOL_SCHEMAS) if tools is None else tools
+    user_content = _build_user_prompt(
+        question_prompt=question_prompt,
+        reference_answer=reference_answer,
+        key_ideas=key_ideas,
+        student_answer=student_answer,
+        max_points=max_points,
+        rubric_hint=rubric_hint,
+    )
+    messages: list[dict[str, Any]] = [
         {"role": "system", "content": JUDGE_SYSTEM},
-        {
-            "role": "user",
-            "content": _build_user_prompt(
-                question_prompt=question_prompt,
-                reference_answer=reference_answer,
-                key_ideas=key_ideas,
-                student_answer=student_answer,
-                max_points=max_points,
-                rubric_hint=rubric_hint,
-            ),
-        },
+        {"role": "user", "content": user_content},
     ]
-    result = client.chat(messages)
-    award = parse_award(result.text, max_points=max_points)
+    agent = Agent(
+        client,
+        step_limit=step_limit,
+        system_prompt=JUDGE_SYSTEM,
+        tools=tool_schemas,
+    )
+    run = agent.run_from_messages(messages)
+    award = parse_award(run.assistant_text, max_points=max_points)
     if award.parse_error:
-        retry_messages = messages + [
-            {"role": "assistant", "content": result.text},
+        retry_messages = run.messages + [
             {
                 "role": "user",
                 "content": (
@@ -77,8 +90,8 @@ def holistic_judge(
                 ),
             },
         ]
-        retry = client.chat(retry_messages)
-        award = parse_award(retry.text, max_points=max_points)
+        retry_run = agent.run_from_messages(retry_messages)
+        award = parse_award(retry_run.assistant_text, max_points=max_points)
     return award
 
 

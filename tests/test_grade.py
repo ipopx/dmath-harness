@@ -49,7 +49,7 @@ def test_grade_mcq_and_numeric_without_judge():
     assert by_id["Q2"]["numeric_points_awarded"] == 4
     assert by_id["Q2"]["points_awarded"] == 4  # method skipped without judge
     assert by_id["Q3"]["points_awarded"] == 0
-    assert report["total_points"] == 20
+    assert report["total_points"] == exam.total_points
 
 
 def test_grade_with_fake_judge():

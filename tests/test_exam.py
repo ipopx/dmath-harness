@@ -11,10 +11,14 @@ def test_load_mock_exam():
     exam = load_exam(MOCK_EXAM)
     assert exam.exam_id == "dmath-mock-2024-hs"
     assert exam.department == "D-MATH"
-    assert len(exam.questions) == 3
+    assert len(exam.questions) == 5
     assert exam.questions[0].type == "mcq"
     assert exam.questions[0].choices is not None
     assert "A" in exam.questions[0].choices
+    assert exam.questions[3].id == "Q4"
+    assert "calculator" in exam.questions[3].prompt.lower()
+    assert exam.questions[4].id == "Q5"
+    assert "run_python" in exam.questions[4].prompt.lower()
 
 
 def test_mcq_user_prompt_includes_choices():

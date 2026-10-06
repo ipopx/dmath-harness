@@ -3,6 +3,7 @@ __pycache__/
 *.py[cod]
 .env
 .venv/
+# Local trajectories / grade reports (do not commit)
 runs/
 *.egg-info/
 dist/

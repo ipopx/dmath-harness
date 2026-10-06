@@ -6,8 +6,8 @@
   "institution": "ETH Zurich",
   "term": "HS2024",
   "language": "en",
-  "total_points": 20,
-  "notes": "Synthetic Phase-0 fixture for harness/grader development. Not a real exam. DMATH/D-MATH = Department of Mathematics, not the course name.",
+  "total_points": 28,
+  "notes": "Synthetic Phase-0 fixture for harness/grader development. Not a real exam. DMATH/D-MATH = Department of Mathematics, not the course name. Q4 is a tool-call probe for the ReAct calculator; Q5 probes run_python (Docker).",
   "questions": [
     {
       "id": "Q1",
@@ -110,6 +110,52 @@
           "topic": "graph_theory",
           "grading": "llm_judge",
           "expected": "Contradiction to δ(G) ≥ (n−1)/2; concludes G is connected."
+        }
+      ]
+    },
+    {
+      "id": "Q4",
+      "type": "short_answer",
+      "topic": "arithmetic",
+      "difficulty": "easy",
+      "language": "en",
+      "points": 4,
+      "prompt": "Use the calculator tool to calculate (17 * 19) + (23 * 29) − 41. Report the integer result. Do not compute the arithmetic yourself; you must call the calculator tool with this expression.",
+      "reference": {
+        "answer": 949,
+        "derivation": "(17*19)+(23*29)−41 = 323 + 667 − 41 = 949."
+      },
+      "steps": [
+        {
+          "id": "Q4.a",
+          "description": "Compute the numeric value via the calculator",
+          "points": 4,
+          "topic": "arithmetic",
+          "grading": "numeric_exact",
+          "expected": 949
+        }
+      ]
+    },
+    {
+      "id": "Q5",
+      "type": "short_answer",
+      "topic": "symbolic_algebra",
+      "difficulty": "easy",
+      "language": "en",
+      "points": 4,
+      "prompt": "Use the run_python tool (with sympy) to compute the integer factorial 12!. Do not compute it yourself; call run_python with code that prints sympy.factorial(12). Report the integer result.",
+      "reference": {
+        "answer": 479001600,
+        "derivation": "12! = 479001600."
+      },
+      "steps": [
+        {
+          "id": "Q5.a",
+          "description": "Compute 12! via run_python / sympy",
+          "points": 4,
+          "topic": "symbolic_algebra",
+          "grading": "numeric_exact",
+          "expected": 479001600
         }
       ]
     }

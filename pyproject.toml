@@ -10,3 +10,8 @@ requires-python = ">=3.11"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/dmath_harness"]
+
+[tool.pytest.ini_options]
+markers = [
+    "docker: tests that require the dmath-python-sandbox Docker image",
+]

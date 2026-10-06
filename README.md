@@ -116,7 +116,8 @@ Scores trajectories against the exam JSON:
 - **Proof** — holistic LLM judge (one score for the whole proof; not step-wise)
 
 Uses the same OpenAI-compatible stack; optional `JUDGE_MODEL` in `.env`
-(defaults to `MODEL`).
+(defaults to `MODEL`). The holistic judge runs in the same ReAct `Agent` wrapper
+as the solver, with the same tools (`calculator`, `run_python`).
 
 ```bash
 # requires runs/baseline_apertus8b_mock.jsonl from step 3
@@ -142,10 +143,58 @@ PYTHONPATH=src pixi run python -m dmath_harness grade run \
   --no-judge
 ```
 
+## Phase 1.2 / 1.3 — ReAct agent with tools
+
+The harnessed agent uses the same OpenAI-compatible client, plus a ReAct loop
+with function tools:
+
+- **`calculator`** — safe arithmetic (restricted AST)
+- **`run_python`** — plain Python in an ephemeral Docker sandbox (numpy, sympy)
+
+Tools are registered in `src/dmath_harness/tools/dispatch.py`. Drop a
+`(schema, handler)` pair there (or pass a custom `tools=` list into `Agent`) to
+disable a tool.
+
+### Build the Python sandbox (once)
+
+Requires Docker (Docker Desktop, Colima, etc.):
+
+```bash
+docker build -t dmath-python-sandbox:latest docker/python-sandbox
+```
+
+Optional sandbox knobs are documented in `.env.example`
+(`DMATH_PYTHON_SANDBOX_*`).
+
+### Run the agent
+
+```bash
+pixi run agent-mock
+```
+
+Or pin model / question / output (llama3.2 is useful for debugging tool calls):
+
+```bash
+MODEL=llama3.2:3b PYTHONPATH=src pixi run python -m dmath_harness agent run \
+  --exam data/exams/dmath-mock-2024-hs.json \
+  --question-id Q5 \
+  --out runs/agent_llama32_3b_q5_python.jsonl
+```
+
+Mock probes: **Q4** forces `calculator`; **Q5** forces `run_python` (sympy).
+
+Trajectories and grade JSON are written under `runs/` (gitignored).
+
 ### Tests (no model needed)
 
 ```bash
 PYTHONPATH=src pixi run --environment dev pytest -q
+```
+
+Docker-backed `run_python` tests need the sandbox image (build step above):
+
+```bash
+PYTHONPATH=src pixi run --environment dev pytest -q -m docker
 ```
 
 ### CSCS later (same client)
