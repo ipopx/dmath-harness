@@ -3,46 +3,119 @@
 Compare a bare open-weight LLM against a harnessed agent on ETH **D-MATH**
 (Department of Mathematics) exam problems.
 
-## Phase 1.1 — No-harness baseline
+## Phase 1.1 — Reproduce the local Apertus baseline
 
-Thin OpenAI-compatible chat client + single-prompt runner over exam JSON.
-Local development targets **Apertus 8B** via Ollama; later the same code points
-at the **CSCS Inference API** by changing `.env` only.
+This runs a **no-harness** baseline: one chat completion per exam question, no
+tools. Trajectories land in `runs/*.jsonl`.
 
-### Local Apertus 8B (size)
+### Prerequisites
 
-| | Approx. |
-|--|--|
-| Download (Q4 quantized) | ~4.7–5.5 GB disk |
-| Full BF16 weights | ~16–17 GB disk |
-| Runtime (Q4 + overhead) | ~6 GB memory |
-| Comfortable Mac | 16 GB unified memory |
+- macOS (Apple Silicon recommended) or Linux
+- ~6 GB free RAM while the model runs; ~5 GB disk for the download
+- [pixi](https://pixi.sh) (`curl -fsSL https://pixi.sh/install.sh | bash`)
+- [Ollama](https://ollama.com) (macOS: download the app, or use their install script)
 
-### Setup
+### 1. Clone and install Python deps
 
 ```bash
+cd dmath-harness
 pixi install
 cp .env.example .env
-# Install Ollama, pull an Apertus 8B instruct tag, set MODEL in .env
 ```
 
-Ollama serves an OpenAI-compatible API at `http://127.0.0.1:11434/v1`.
+`.env` should look like this (already set in `.env.example`):
 
-### Run baseline on the mock exam
+```env
+OPENAI_BASE_URL=http://127.0.0.1:11434/v1
+OPENAI_API_KEY=ollama
+MODEL=MichelRosselli/apertus:8b-instruct-2509-q4_k_m
+TEMPERATURE=0
+OPENAI_TIMEOUT_S=300
+```
+
+### 2. Start Ollama and pull Apertus 8B
+
+```bash
+# macOS: open the Ollama app once so the API listens on :11434
+open -a Ollama
+
+# Community Q4 GGUF of Apertus-8B-Instruct (~5.1 GB, first time only)
+ollama pull MichelRosselli/apertus:8b-instruct-2509-q4_k_m
+```
+
+Check the server:
+
+```bash
+curl -s http://127.0.0.1:11434/api/tags
+```
+
+### 3. Run the baseline on the mock exam
 
 ```bash
 pixi run baseline-mock
-# or:
+```
+
+Equivalent explicit command (writes a timestamped file under `runs/`):
+
+```bash
 PYTHONPATH=src pixi run python -m dmath_harness baseline run \
   --exam data/exams/dmath-mock-2024-hs.json
 ```
 
-Trajectories are written under `runs/` (gitignored) as JSONL: one record per
-question with messages, assistant text, token usage, and latency.
+Pin the output path:
 
-### CSCS later
+```bash
+PYTHONPATH=src pixi run python -m dmath_harness baseline run \
+  --exam data/exams/dmath-mock-2024-hs.json \
+  --out runs/baseline_apertus8b_mock.jsonl
+```
 
-When you have a CSCS Inference API key:
+Optional: only one question
+
+```bash
+PYTHONPATH=src pixi run python -m dmath_harness baseline run \
+  --exam data/exams/dmath-mock-2024-hs.json \
+  --question-id Q1
+```
+
+### 4. Inspect results
+
+Each line of the JSONL is one question: `assistant_text`, `usage`, `latency_ms`,
+full `messages`, `model`, etc.
+
+```bash
+# quick peek
+python -c "
+import json
+from pathlib import Path
+p = sorted(Path('runs').glob('baseline_*.jsonl'))[-1]
+for line in p.read_text().splitlines():
+    r = json.loads(line)
+    print(r['question_id'], r['usage'], r['assistant_text'][:200], '...\n')
+"
+```
+
+### Model size (local Q4)
+
+| | Approx. |
+|--|--|
+| Download | ~5.1 GB disk |
+| Runtime | ~6 GB memory |
+| Comfortable Mac | 16 GB unified memory |
+
+Note: the Ollama tag is a **community GGUF** of Apertus 8B Instruct, not the
+CSCS-hosted `swiss-ai/Apertus-v1.5-*` checkpoint. Re-run on CSCS for official
+cross-model comparisons.
+
+### Tests (no model needed)
+
+```bash
+PYTHONPATH=src pixi run --environment dev pytest -q
+```
+
+### CSCS later (same client)
+
+When you have a CSCS Inference API key, only change `.env`:
 
 ```env
 OPENAI_BASE_URL=https://api.inference.cscs.ch/v1
@@ -50,4 +123,5 @@ OPENAI_API_KEY=<CSCS_INFERENCE_API_KEY>
 MODEL=swiss-ai/Apertus-v1.5-8B
 ```
 
-List models available to your key with `GET /v1/models` on that base URL.
+Then run the same `pixi run baseline-mock` command. List models with
+`GET https://api.inference.cscs.ch/v1/models`.
