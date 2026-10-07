@@ -155,16 +155,23 @@ Tools are registered in `src/dmath_harness/tools/dispatch.py`. Drop a
 `(schema, handler)` pair there (or pass a custom `tools=` list into `Agent`) to
 disable a tool.
 
-### Build the Python sandbox (once)
+### Python sandbox (`run_python`)
 
-Requires Docker (Docker Desktop, Colima, etc.):
+Requires **Docker**. During each agent question the harness keeps **one** sandbox
+container alive (stateful Python REPL reused across `run_python` calls) and
+removes it when that question’s ReAct loop ends (`finished` or step-limit). On
+first use it also brings Docker up if needed (locate the CLI, start Desktop /
+Colima, wait for the daemon, and build `dmath-python-sandbox:latest` from
+`docker/python-sandbox` when missing). There is no local-process fallback.
+
+Install Docker Desktop for Mac: https://docs.docker.com/desktop/setup/install/mac-install/
+Then open the app once, and (optional if auto-build works):
 
 ```bash
 docker build -t dmath-python-sandbox:latest docker/python-sandbox
 ```
 
-Optional sandbox knobs are documented in `.env.example`
-(`DMATH_PYTHON_SANDBOX_*`).
+Sandbox knobs are in `.env.example` (`DMATH_PYTHON_SANDBOX_*`).
 
 ### Run the agent
 

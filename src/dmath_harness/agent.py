@@ -9,6 +9,7 @@ from dmath_harness.baseline import build_user_prompt
 from dmath_harness.client import ChatClient, Usage
 from dmath_harness.exam import Question
 from dmath_harness.tools import TOOL_SCHEMAS, dispatch_tool_call
+from dmath_harness.tools.run_python import begin_python_sandbox, end_python_sandbox
 
 DEFAULT_STEP_LIMIT = 8
 
@@ -90,45 +91,51 @@ class Agent:
         usages: list[Usage] = []
         last_text = ""
 
-        for step_idx in range(self.step_limit):
-            result = self.client.chat(self.messages, tools=self.tools)
-            usages.append(result.usage)
-            assistant_msg = (
-                result.assistant_message
-                if result.assistant_message
-                else {"role": "assistant", "content": result.text}
-            )
-            self.messages.append(assistant_msg)
-            self.steps.append(
-                {
-                    "step": step_idx + 1,
-                    "usage": result.usage.to_dict(),
-                    "latency_ms": round(result.latency_ms, 2),
-                    "finish_reason": result.raw_finish_reason,
-                    "n_tool_calls": len(result.tool_calls),
-                }
-            )
-
-            if not result.tool_calls:
-                self.finished = True
-                last_text = result.text
-                break
-
-            for tc in result.tool_calls:
-                observation = dispatch_tool_call(tc.name, tc.arguments)
-                self.messages.append(
+        # One Docker Python sandbox for this question; torn down when the run ends
+        # (finished=True or step_limit exhausted).
+        begin_python_sandbox()
+        try:
+            for step_idx in range(self.step_limit):
+                result = self.client.chat(self.messages, tools=self.tools)
+                usages.append(result.usage)
+                assistant_msg = (
+                    result.assistant_message
+                    if result.assistant_message
+                    else {"role": "assistant", "content": result.text}
+                )
+                self.messages.append(assistant_msg)
+                self.steps.append(
                     {
-                        "role": "tool",
-                        "tool_call_id": tc.id,
-                        "content": observation,
+                        "step": step_idx + 1,
+                        "usage": result.usage.to_dict(),
+                        "latency_ms": round(result.latency_ms, 2),
+                        "finish_reason": result.raw_finish_reason,
+                        "n_tool_calls": len(result.tool_calls),
                     }
                 )
-            # Keep last assistant text if the model also wrote content alongside tools.
-            if result.text:
-                last_text = result.text
-        else:
-            # Exhausted step_limit without a tool-free reply.
-            self.finished = False
+
+                if not result.tool_calls:
+                    self.finished = True
+                    last_text = result.text
+                    break
+
+                for tc in result.tool_calls:
+                    observation = dispatch_tool_call(tc.name, tc.arguments)
+                    self.messages.append(
+                        {
+                            "role": "tool",
+                            "tool_call_id": tc.id,
+                            "content": observation,
+                        }
+                    )
+                # Keep last assistant text if the model also wrote content alongside tools.
+                if result.text:
+                    last_text = result.text
+            else:
+                # Exhausted step_limit without a tool-free reply.
+                self.finished = False
+        finally:
+            end_python_sandbox()
 
         return AgentRunResult(
             assistant_text=last_text,

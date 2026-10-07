@@ -5,6 +5,11 @@ __pycache__/
 .venv/
 # Local trajectories / grade reports (do not commit)
 runs/
+# Local analysis figures / vendored plot deps
+plots/
+.matplotlib/
+.vendor/
 *.egg-info/
 dist/
 build/
+.rattler-cache/

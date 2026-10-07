@@ -8,10 +8,14 @@ import subprocess
 import pytest
 
 from dmath_harness.tools.dispatch import TOOL_SCHEMAS, dispatch_tool_call
+from dmath_harness.tools import run_python as run_python_mod
 from dmath_harness.tools.run_python import (
     DEFAULT_IMAGE,
     RUN_PYTHON_SCHEMA,
+    begin_python_sandbox,
+    end_python_sandbox,
     execute_python,
+    reset_docker_ensure_state,
     run_python,
 )
 
@@ -33,6 +37,12 @@ def test_run_python_argument_validation():
 def test_dispatch_run_python_malformed_json():
     assert dispatch_tool_call("run_python", "not-json").startswith("Error:")
 
+
+def test_errors_when_docker_unavailable(monkeypatch):
+    reset_docker_ensure_state()
+    monkeypatch.setattr(run_python_mod, "ensure_docker", lambda image=None: None)
+    out = execute_python("print(1)")
+    assert out.startswith("Error: docker CLI/daemon/image could not be brought up")
 
 def _docker_ready() -> bool:
     if shutil.which("docker") is None:
@@ -85,3 +95,35 @@ def test_dispatch_run_python_happy_path():
         '{"code": "import numpy as np\\nprint(int(np.sum([1, 2, 3])))"}',
     )
     assert result.strip() == "6"
+
+
+@docker_required
+@pytest.mark.docker
+def test_session_reuses_container_and_state():
+    begin_python_sandbox()
+    try:
+        out1 = execute_python("x = 41\nprint('ok')")
+        assert "ok" in out1
+        out2 = execute_python("print(x + 1)")
+        assert out2.strip() == "42"
+        listed = subprocess.run(
+            ["docker", "ps", "--format", "{{.Names}}"],
+            capture_output=True,
+            text=True,
+            timeout=15,
+            check=False,
+        )
+        assert any(name.startswith("dmath-py-") for name in listed.stdout.splitlines())
+    finally:
+        end_python_sandbox()
+
+    listed_after = subprocess.run(
+        ["docker", "ps", "--format", "{{.Names}}"],
+        capture_output=True,
+        text=True,
+        timeout=15,
+        check=False,
+    )
+    assert not any(
+        name.startswith("dmath-py-") for name in listed_after.stdout.splitlines()
+    )
