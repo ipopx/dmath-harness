@@ -10,11 +10,13 @@ pandas = "*"
 openai = ">=1.40"
 python-dotenv = "*"
 pydantic = ">=2"
+streamlit = ">=1.32"
 
 [tasks]
 baseline-mock = { cmd = "python -m dmath_harness baseline run --exam data/exams/dmath-mock-2024-hs.json", env = { PYTHONPATH = "src" } }
 agent-mock = { cmd = "python -m dmath_harness agent run --exam data/exams/dmath-mock-2024-hs.json", env = { PYTHONPATH = "src" } }
 grade-mock = { cmd = "python -m dmath_harness grade run --exam data/exams/dmath-mock-2024-hs.json --trajectories runs/baseline_apertus8b_mock.jsonl --out runs/grades_apertus8b_mock.json", env = { PYTHONPATH = "src" } }
+ui = { cmd = "streamlit run src/dmath_harness/ui/app.py --server.headless true", env = { PYTHONPATH = "src" } }
 
 [feature.dev.dependencies]
 pytest = "*"

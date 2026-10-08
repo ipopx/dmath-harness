@@ -192,6 +192,19 @@ Mock probes: **Q4** forces `calculator`; **Q5** forces `run_python` (sympy).
 
 Trajectories and grade JSON are written under `runs/` (gitignored).
 
+### Streamlit explorer
+
+Browse existing `runs/*.jsonl` trajectories (messages + tool calls + tokens /
+latency / grades), or press **Run selected** to call the model live:
+
+```bash
+pixi run ui
+```
+
+Open the URL Streamlit prints (default `http://localhost:8501`). Sidebar:
+model preset (Llama / Apertus / custom), harness mode (agent vs baseline),
+exam + question multiselect, optional post-run grading.
+
 ### Tests (no model needed)
 
 ```bash
